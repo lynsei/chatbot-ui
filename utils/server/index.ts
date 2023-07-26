@@ -31,9 +31,40 @@ export const OpenAIStream = async (
   messages: Message[],
 ) => {
   let url = `${OPENAI_API_HOST}/v1/chat/completions`;
+
+
   if (OPENAI_API_TYPE === 'azure') {
-    url = `${OPENAI_API_HOST}/openai/deployments/${AZURE_DEPLOYMENT_ID}/chat/completions?api-version=${OPENAI_API_VERSION}`;
+    url = `${OPENAI_API_HOST}/openai/deployments/${AZURE_DEPLOYMENT_ID}/extensions/chat/completions?api-version=${process.env.API_VERSION}`;
+
   }
+
+  const resBody = JSON.stringify({
+    ...(OPENAI_API_TYPE === 'openai' && {model: model.id}),
+    dataSources : [
+      {
+        type: 'AzureCognitiveSearch',
+        parameters: {
+          queryType: 'semantic',
+          topNDocuments: '5',
+          semanticConfiguration: `${process.env.COGNITIVE_SEMANTIC_PROFILE}`,
+          endpoint: `${process.env.COGNITIVE_SEARCH_ENDPOINT}`,
+          key: `${process.env.COGNITIVE_SEARCH_KEY}`,
+          indexName: `${process.env.COGNITIVE_SEARCH_INDEX}`
+        }
+      }
+    ],
+    messages: [
+      {
+        role: 'system',
+        content: "You are an AI Assistant that is an expert at summarizing the content of databases. Follow the user's instructions carefully as pertains to the experiments index. Respond using markdown without citations or JSON.",
+      },
+      ...messages,
+    ],
+    max_tokens: 1000,
+    temperature: temperature,
+    stream: true,
+  });
+
   const res = await fetch(url, {
     headers: {
       'Content-Type': 'application/json',
@@ -48,21 +79,10 @@ export const OpenAIStream = async (
       }),
     },
     method: 'POST',
-    body: JSON.stringify({
-      ...(OPENAI_API_TYPE === 'openai' && {model: model.id}),
-      messages: [
-        {
-          role: 'system',
-          content: systemPrompt,
-        },
-        ...messages,
-      ],
-      max_tokens: 1000,
-      temperature: temperature,
-      stream: true,
-    }),
+    body: `${resBody}`,
   });
-
+  console.log(url);
+  console.log(resBody);
   const encoder = new TextEncoder();
   const decoder = new TextDecoder();
 
@@ -89,16 +109,19 @@ export const OpenAIStream = async (
       const onParse = (event: ParsedEvent | ReconnectInterval) => {
         if (event.type === 'event') {
           const data = event.data;
-
+          
           try {
             const json = JSON.parse(data);
-            if (json.choices[0].finish_reason != null) {
+            console.log(json);
+            if (json.choices[0].messages[0].end_turn) {
               controller.close();
               return;
             }
-            const text = json.choices[0].delta.content;
+          
+            const text = (json.choices[0].messages[0].delta.content ? json.choices[0].messages[0].delta.content : ' ');
             const queue = encoder.encode(text);
             controller.enqueue(queue);
+
           } catch (e) {
             controller.error(e);
           }
