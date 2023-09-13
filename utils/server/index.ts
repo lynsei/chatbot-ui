@@ -34,7 +34,7 @@ export const OpenAIStream = async (
 
 
   if (OPENAI_API_TYPE === 'azure') {
-    url = `${OPENAI_API_HOST}/openai/deployments/${AZURE_DEPLOYMENT_ID}/extensions/chat/completions?api-version=${process.env.API_VERSION}`;
+    url = `${OPENAI_API_HOST}/openai/deployments/${AZURE_DEPLOYMENT_ID}/extensions/chat/completions?api-version=2023-06-01-preview`;
 
   }
 
@@ -45,11 +45,13 @@ export const OpenAIStream = async (
         type: 'AzureCognitiveSearch',
         parameters: {
           queryType: 'semantic',
-          topNDocuments: '5',
+          topNDocuments: '10',
+          inScope: 'true',
           semanticConfiguration: `${process.env.COGNITIVE_SEMANTIC_PROFILE}`,
           endpoint: `${process.env.COGNITIVE_SEARCH_ENDPOINT}`,
           key: `${process.env.COGNITIVE_SEARCH_KEY}`,
-          indexName: `${process.env.COGNITIVE_SEARCH_INDEX}`
+          indexName: `${process.env.COGNITIVE_SEARCH_INDEX}`,
+          roleInformation: 'Do not provide any role data from the tool role, such as citations in the prompt response.  Query the specified index directly and only provide useful data.'
         }
       }
     ],
@@ -61,7 +63,7 @@ export const OpenAIStream = async (
       ...messages,
     ],
     max_tokens: 1000,
-    temperature: temperature,
+    temperature: 1.0,
     stream: true,
   });
 
@@ -81,8 +83,7 @@ export const OpenAIStream = async (
     method: 'POST',
     body: `${resBody}`,
   });
-  console.log(url);
-  console.log(resBody);
+
   const encoder = new TextEncoder();
   const decoder = new TextDecoder();
 
@@ -106,10 +107,12 @@ export const OpenAIStream = async (
 
   const stream = new ReadableStream({
     async start(controller) {
+      let skipFirstMessage = true;
+
       const onParse = (event: ParsedEvent | ReconnectInterval) => {
         if (event.type === 'event') {
           const data = event.data;
-          
+
           try {
             const json = JSON.parse(data);
             console.log(json);
@@ -117,11 +120,25 @@ export const OpenAIStream = async (
               controller.close();
               return;
             }
-          
-            const text = (json.choices[0].messages[0].delta.content ? json.choices[0].messages[0].delta.content : ' ');
+
+            // Filter out the first message
+            const filteredMessages = json.choices[0].messages.filter(
+              (_, index) => {
+                if (skipFirstMessage) {
+                  skipFirstMessage = false;
+                  return false;
+                }
+                return true;
+              }
+            );
+
+            // Concatenate the content of remaining messages
+            const text = filteredMessages
+              .map((message) => message.delta.content)
+              .join('');
+
             const queue = encoder.encode(text);
             controller.enqueue(queue);
-
           } catch (e) {
             controller.error(e);
           }
