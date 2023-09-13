@@ -1,31 +1,29 @@
-# Chatbot UI
+# Azure Cognitive Search + OpenAI
 
-Chatbot UI is an open source chat UI for AI models.
+This is a fork of ChatBotUI designed specifically for `completion extensions` on Azure OpenAI.
+Extensions work different in that the data passed back from the API uses citations, and is designed a bit different in how the API works.
+The way this code is modified, it works on Azure Cognitive Search and will run one index on OpenAI.
 
-See a [demo](https://twitter.com/mckaywrigley/status/1640380021423603713?s=46&t=AowqkodyK6B4JccSOxSPew).
+It's modified to work with the role system and API format of '2023-06-01-preview' for Azure OpenAI Completion Extensions.
 
-![Chatbot UI](./public/screenshots/screenshot-0402023.jpg)
+> This is an ongoing project & is experimental
 
-## Updates
+## Use Case:
 
-Chatbot UI will be updated over time.
+Use this as a UI for AI responses that utilize semantic profiles with a cognitive search index at Azure.
 
-Expect frequent improvements.
+## How does it work
 
-**Next up:**
 
-- [ ] Sharing
-- [ ] "Bots"
+#### All requests run through:
 
-## Deploy
+- Azure Cognitive Search Index 
+- Azure OpenAI
+- Azure Vector Embeddings API
 
-**Vercel**
-
-Host your own live version of Chatbot UI with Vercel.
-
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fmckaywrigley%2Fchatbot-ui)
 
 **Docker**
+
 
 Build locally:
 
@@ -74,7 +72,7 @@ npm run dev
 
 **5. Use It**
 
-You should be able to start chatting.
+Start querying the AI.
 
 ## Configuration
 
@@ -98,8 +96,9 @@ If you do not provide an OpenAI API key with `OPENAI_API_KEY`, users will have t
 
 If you don't have an OpenAI API key, you can get one [here](https://platform.openai.com/account/api-keys).
 
-## Contact
+## Maintainer
 
-If you have any questions, feel free to reach out to Mckay on [Twitter](https://twitter.com/mckaywrigley).
+Lynsei (lynsei.asynynivynya@l7informatics.com)
 
-[GCSE]: https://developers.google.com/custom-search/v1/overview
+## LICENSE
+MIT
