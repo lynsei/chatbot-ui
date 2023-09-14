@@ -57,8 +57,6 @@ export const ModelSelect = () => {
           target="_blank"
           className="flex items-center"
         >
-          <IconExternalLink size={18} className={'inline mr-1'} />
-          {t('View Account Usage')}
         </a>
       </div>
     </div>
