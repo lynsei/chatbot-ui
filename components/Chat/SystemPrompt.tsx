@@ -200,7 +200,6 @@ export const SystemPrompt: FC<Props> = ({
         Cognitive Search Capable
       </label>
       <input type="hidden"
-        ref={textareaRef}
         className="w-full rounded-lg border border-neutral-200 bg-transparent px-4 py-3 text-neutral-900 dark:border-neutral-600 dark:text-neutral-100"
         style={{
           resize: 'none',
@@ -216,9 +215,6 @@ export const SystemPrompt: FC<Props> = ({
           t(`Enter a prompt or type "/" to select a prompt...`) || ''
         }
         value={t(value) || ''}
-        rows={1}
-        onChange={handleChange}
-        onKeyDown={handleKeyDown}
       />
 
       {showPromptList && filteredPrompts.length > 0 && (

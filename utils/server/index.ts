@@ -123,7 +123,7 @@ export const OpenAIStream = async (
 
             // Filter out the first message
             const filteredMessages = json.choices[0].messages.filter(
-              (_, index) => {
+              (_: any, index: any) => {
                 if (skipFirstMessage) {
                   skipFirstMessage = false;
                   return false;
@@ -134,7 +134,7 @@ export const OpenAIStream = async (
 
             // Concatenate the content of remaining messages
             const text = filteredMessages
-              .map((message) => message.delta.content)
+              .map((message: any) => message.delta.content)
               .join('');
 
             const queue = encoder.encode(text);
